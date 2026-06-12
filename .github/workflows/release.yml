@@ -14,12 +14,12 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
-          node-version: 20
+          node-version: 24
           cache: npm
 
       - name: Install dependencies
@@ -37,12 +37,14 @@ jobs:
           zip -r ../api-monitoring-dev-tool-dist.zip .
 
       - name: Publish GitHub release
-        uses: ncipollo/release-action@v1
+        uses: ncipollo/release-action@v1.21.0
         with:
           allowUpdates: true
           makeLatest: true
           replacesArtifacts: true
-          tag: latest
+          removeArtifacts: true
+          tag: continuous
+          commit: ${{ github.sha }}
           name: Latest build
           body: |
             Pre-built Chrome extension — no Node.js or build step required.
