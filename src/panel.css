@@ -520,11 +520,7 @@ button.primary:hover:not(:disabled) {
 }
 
 .request-list--grouped {
-  gap: 0;
-}
-
-.request-list--grouped > * + * {
-  border-top: 1px solid var(--border);
+  gap: 6px;
 }
 
 button.request-item {
@@ -593,13 +589,18 @@ button.request-item {
 }
 
 .request-group {
-  border: 1px solid transparent;
+  border: 1px solid var(--border);
   border-radius: var(--radius);
   overflow: hidden;
 }
 
 .request-group[open] {
+  border-color: var(--border-strong);
   overflow: visible;
+}
+
+.request-group:hover:not(.has-selected) {
+  border-color: var(--border-strong);
 }
 
 .request-group.has-selected:not([open]) {
@@ -895,11 +896,22 @@ button.request-item-nested {
 }
 
 .panel .accordion-details,
-.panel-grow .accordion-details-grow,
-.pv-section.accordion-details {
+.panel-grow .accordion-details-grow {
   display: flex;
   flex-direction: column;
   min-height: 0;
+}
+
+/* Flex on <details> breaks open/close in Chromium; keep block on the element. */
+.pv-section.accordion-details,
+details.request-group.accordion-details {
+  display: block;
+  min-height: 0;
+}
+
+.pv-section.accordion-details::details-content,
+details.request-group.accordion-details::details-content {
+  display: block;
 }
 
 .accordion-trigger {
@@ -928,22 +940,19 @@ button.request-item-nested {
   justify-content: center;
   width: 20px;
   height: 20px;
-  font-size: 0;
-  line-height: 1;
-  opacity: 1;
   color: var(--text-muted);
 }
 
-.accordion-chevron::before {
-  font-size: 15px;
-  font-weight: 700;
-  line-height: 1;
-  content: "›";
-  color: var(--text-muted);
+.accordion-chevron .accordion-icon {
+  display: block;
+  transform: rotate(0deg);
+  transform-origin: center center;
+  transition: transform 150ms ease;
 }
 
-.accordion-details[open] .accordion-chevron::before {
-  content: "▾";
+details[open] .accordion-chevron .accordion-icon,
+details.is-expanded .accordion-chevron .accordion-icon {
+  transform: rotate(90deg);
 }
 
 .preview-meta {
@@ -1096,6 +1105,9 @@ button.request-item-nested {
   border-radius: var(--radius-sm);
   background: var(--bg-panel);
   overflow: hidden;
+}
+
+div.pv-section {
   display: flex;
   flex-direction: column;
 }

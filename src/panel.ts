@@ -15,6 +15,8 @@ const COPY_ICON =
   '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>';
 const CHECK_ICON =
   '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg>';
+const ACCORDION_CHEVRON_SVG =
+  '<svg class="accordion-icon" viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 4l4 4-4 4"/></svg>';
 
 declare global {
   interface Window {
@@ -155,7 +157,101 @@ async function bootstrap(): Promise<void> {
   state.settings = await loadUserSettings();
   applySettingsToControls();
   initSectionMenu();
+  initAccordionBehavior();
   render();
+}
+
+function createAccordionChevron(): HTMLSpanElement {
+  const chevron = document.createElement("span");
+  chevron.className = "accordion-chevron";
+  chevron.setAttribute("aria-hidden", "true");
+  chevron.innerHTML = ACCORDION_CHEVRON_SVG;
+  return chevron;
+}
+
+const accordionOpenState = new Map<string, boolean>();
+
+function getAccordionStateKey(details: HTMLDetailsElement, captureId?: string | null): string | null {
+  if (details.classList.contains("request-group")) {
+    const title = details.querySelector(".request-title")?.textContent?.trim();
+    return title ? `group:${title}` : null;
+  }
+
+  if (details.classList.contains("pv-section")) {
+    const label = details.querySelector(".pv-label")?.textContent?.trim();
+    const id = captureId ?? state.selectedCaptureId;
+    if (label === undefined || label.length === 0 || id === null) {
+      return null;
+    }
+    return `pv:${id}:${label}`;
+  }
+
+  if (details.classList.contains("accordion-details")) {
+    return "preview:clipboard";
+  }
+
+  return null;
+}
+
+function restoreAccordionOpenState(details: HTMLDetailsElement, captureId?: string | null): void {
+  const key = getAccordionStateKey(details, captureId);
+  if (key === null || !accordionOpenState.has(key)) {
+    return;
+  }
+
+  details.open = accordionOpenState.get(key) ?? false;
+}
+
+function rememberAccordionOpenState(details: HTMLDetailsElement, captureId?: string | null): void {
+  const key = getAccordionStateKey(details, captureId);
+  if (key !== null) {
+    accordionOpenState.set(key, details.open);
+  }
+}
+
+function bindAccordionDetails(details: HTMLDetailsElement, captureId?: string | null): void {
+  const trigger = details.querySelector(":scope > summary");
+  if (!(trigger instanceof HTMLElement)) {
+    return;
+  }
+
+  const syncExpandedState = (): void => {
+    details.classList.toggle("is-expanded", details.open);
+    trigger.setAttribute("aria-expanded", String(details.open));
+    rememberAccordionOpenState(details, captureId);
+  };
+
+  restoreAccordionOpenState(details, captureId);
+
+  if (details.dataset.accordionBound !== "true") {
+    details.dataset.accordionBound = "true";
+    details.addEventListener("toggle", syncExpandedState);
+
+    trigger.addEventListener("click", (event) => {
+      if (
+        event.target instanceof Element &&
+        event.target.closest("button, a, input, select, textarea, label")
+      ) {
+        return;
+      }
+
+      event.preventDefault();
+      details.open = !details.open;
+    });
+  }
+
+  syncExpandedState();
+}
+
+function initAccordionBehavior(
+  root: ParentNode = document,
+  captureId: string | null = state.selectedCaptureId
+): void {
+  for (const details of root.querySelectorAll<HTMLDetailsElement>(
+    "details.accordion-details, details.request-group"
+  )) {
+    bindAccordionDetails(details, captureId);
+  }
 }
 
 function initSectionMenu(): void {
@@ -242,6 +338,7 @@ function render(): void {
 
   renderRequestList(filteredCaptures, total);
   renderSelectedCapture();
+  initAccordionBehavior();
 }
 
 function renderRequestList(captures: readonly FailedApiCapture[], total: number): void {
@@ -322,10 +419,7 @@ function createRequestGroupElement(group: ApiCaptureGroup): HTMLElement {
   count.textContent = `×${group.captures.length}`;
   topRow.append(count);
 
-  const chevron = document.createElement("span");
-  chevron.className = "chevron accordion-chevron";
-  chevron.setAttribute("aria-hidden", "true");
-  topRow.append(chevron);
+  topRow.append(createAccordionChevron());
 
   const bottomRow = document.createElement("div");
   bottomRow.className = "request-bottom";
@@ -653,10 +747,7 @@ function createSection(field: Field, searchTerms: readonly string[]): HTMLElemen
 
   header.append(createCopyButton(field.body));
 
-  const chevron = document.createElement("span");
-  chevron.className = "chevron accordion-chevron";
-  chevron.setAttribute("aria-hidden", "true");
-  header.append(chevron);
+  header.append(createAccordionChevron());
 
   section.append(header);
 
@@ -744,7 +835,6 @@ function createOverviewSection(
 
   const section = document.createElement("details");
   section.className = "pv-section pv-block pv-overview accordion-details";
-  section.open = true;
 
   const header = document.createElement("summary");
   header.className = "pv-header accordion-trigger";
@@ -754,10 +844,7 @@ function createOverviewSection(
   label.textContent = "Overview";
   header.append(label);
 
-  const chevron = document.createElement("span");
-  chevron.className = "chevron accordion-chevron";
-  chevron.setAttribute("aria-hidden", "true");
-  header.append(chevron);
+  header.append(createAccordionChevron());
 
   section.append(header);
 
