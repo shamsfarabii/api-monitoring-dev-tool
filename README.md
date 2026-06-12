@@ -6,51 +6,20 @@ Use it to debug failing APIs, share bug reports, or replay requests with cURL / 
 
 ---
 
-## What you need
+## Quick install (recommended)
 
-- **Google Chrome**, **Microsoft Edge**, **Brave**, or another **Chromium-based** browser
-- **Node.js 18+** and **npm** (only for building the extension)
+**No coding, no Node.js, no build step.**
 
----
+1. **[Download the latest extension (ZIP)](https://github.com/shamsfarabii/api-monitoring-dev-tool/releases/latest/download/api-monitoring-dev-tool-dist.zip)**
+2. Unzip the file — you will get a folder with `manifest.json` inside.
+3. Open your browser extensions page:
+   - **Chrome:** [chrome://extensions](chrome://extensions)
+   - **Edge:** [edge://extensions](edge://extensions)
+4. Turn on **Developer mode** (top-right toggle).
+5. Click **Load unpacked** and select the **unzipped folder**.
+6. Done — the extension **"API এর যত কাহিনী"** is installed.
 
-## Install (5 minutes)
-
-### 1. Get the code
-
-```bash
-git clone <your-repo-url>
-cd ext
-```
-
-Or download the project as a ZIP and unzip it.
-
-### 2. Install dependencies
-
-```bash
-npm install
-```
-
-### 3. Build the extension
-
-```bash
-npm run build
-```
-
-This creates a `dist/` folder. **You must load the extension from `dist/`**, not from the project root.
-
-> **Tip:** After you change the source code, run `npm run build` again and click **Reload** on the extension in your browser.
-
-### 4. Load it in Chrome / Edge
-
-1. Open your browser and go to the extensions page:
-   - **Chrome:** `chrome://extensions`
-   - **Edge:** `edge://extensions`
-2. Turn on **Developer mode** (top-right toggle).
-3. Click **Load unpacked**.
-4. Select the **`dist`** folder inside this project (e.g. `ext/dist`).
-5. The extension **"API এর যত কাহিনী"** should appear in your list.
-
-You only need to do this once. After rebuilding, use the **Reload** button on the extension card.
+> **First time?** The download link works after the first GitHub release is published (push to `main` triggers an automatic build). If the link is not ready yet, use [Build from source](#build-from-source) below.
 
 ---
 
@@ -104,7 +73,20 @@ Turn on **Redact secrets** in the **Include** menu before copying if you want to
 
 ---
 
-## Development
+## Build from source
+
+For developers who want to change the code or run tests locally.
+
+**Requirements:** Node.js 18+ and npm
+
+```bash
+git clone https://github.com/shamsfarabii/api-monitoring-dev-tool.git
+cd api-monitoring-dev-tool
+npm install
+npm run build
+```
+
+Load the **`dist/`** folder via **Load unpacked** in `chrome://extensions`.
 
 ```bash
 # Rebuild automatically when files change
@@ -112,9 +94,12 @@ npm run dev
 
 # Run tests
 npm test
+
+# Create the same ZIP used for releases
+npm run package:dist
 ```
 
-After `npm run dev`, reload the extension in `chrome://extensions` to see changes.
+After rebuilding, click **Reload** on the extension card in `chrome://extensions`.
 
 ---
 
@@ -122,10 +107,10 @@ After `npm run dev`, reload the extension in `chrome://extensions` to see change
 
 | Problem | Fix |
 |--------|-----|
-| Extension does not appear in DevTools | Make sure you loaded the **`dist`** folder, not the project root. Reload the extension after building. |
+| Download link returns 404 | The first release may not be published yet. Push to `main` or ask a maintainer to run the **Release extension** workflow. Or [build from source](#build-from-source). |
+| Extension does not appear in DevTools | Load the **unzipped folder** that contains `manifest.json`, not the ZIP file itself. |
 | No requests showing | Interact with the page to trigger API calls. Confirm requests appear in the Network tab as **fetch** or **xhr**. |
-| "Load unpacked" fails | Run `npm run build` first — the `dist` folder must exist. |
-| Changes not visible | Run `npm run build` (or `npm run dev`), then click **Reload** on the extension. |
+| Changes not visible (dev) | Run `npm run build`, then click **Reload** on the extension. |
 | Copy does not work | Click inside the DevTools panel first, then try Copy again. Some browsers require a user gesture. |
 
 ---
@@ -136,7 +121,7 @@ After `npm run dev`, reload the extension in `chrome://extensions` to see change
 ext/
 ├── src/           # TypeScript source
 ├── public/        # manifest.json and icons
-├── dist/          # Built extension — load this in the browser
+├── dist/          # Built extension (created by npm run build)
 ├── panel.html     # DevTools panel UI
 └── devtools.html  # DevTools entry point
 ```

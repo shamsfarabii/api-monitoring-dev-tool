@@ -1,0 +1,54 @@
+name: Release extension
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests
+        run: npm test
+
+      - name: Build extension
+        run: npm run build
+
+      - name: Pack dist folder
+        run: |
+          cd dist
+          zip -r ../api-monitoring-dev-tool-dist.zip .
+
+      - name: Publish GitHub release
+        uses: ncipollo/release-action@v1
+        with:
+          allowUpdates: true
+          makeLatest: true
+          replacesArtifacts: true
+          tag: latest
+          name: Latest build
+          body: |
+            Pre-built Chrome extension — no Node.js or build step required.
+
+            1. Download **api-monitoring-dev-tool-dist.zip**
+            2. Unzip it
+            3. In Chrome/Edge, open `chrome://extensions` → enable **Developer mode** → **Load unpacked** → select the unzipped folder
+          artifacts: api-monitoring-dev-tool-dist.zip
+          token: ${{ secrets.GITHUB_TOKEN }}

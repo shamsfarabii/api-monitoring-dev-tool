@@ -1,4 +1,4 @@
 node_modules
-dist
+api-monitoring-dev-tool-dist.zip
 .env
 .DS_Store

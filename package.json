@@ -6,6 +6,7 @@
   "scripts": {
     "build": "tsc --noEmit && vite build",
     "dev": "vite build --watch",
+    "package:dist": "npm run build && cd dist && zip -r ../api-monitoring-dev-tool-dist.zip .",
     "test": "vitest run",
     "test:watch": "vitest"
   },
