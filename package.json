@@ -1,0 +1,19 @@
+{
+  "name": "failed-api-copier",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc --noEmit && vite build",
+    "dev": "vite build --watch",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "devDependencies": {
+    "@types/chrome": "latest",
+    "@types/node": "^25.9.2",
+    "typescript": "latest",
+    "vite": "latest",
+    "vitest": "latest"
+  }
+}

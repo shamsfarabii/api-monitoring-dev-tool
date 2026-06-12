@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>API এর যত কাহিনী</title>
+    <link rel="stylesheet" href="/src/panel.css" />
+  </head>
+  <body>
+    <main class="app">
+      <header class="toolbar">
+        <div class="brand">
+          <span class="brand-mark" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" aria-hidden="true">
+              <path
+                d="M4 7h16M4 12h10M4 17h16"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+              />
+            </svg>
+          </span>
+          <div class="brand-text">
+            <div class="brand-titles">
+              <h1>API এর যত কাহিনী</h1>
+              <span id="count-pill" class="count-pill" hidden>0</span>
+            </div>
+            <p id="summary">No failed API calls captured yet.</p>
+          </div>
+        </div>
+
+        <div class="actions">
+          <label class="format-select-label" for="format-select">
+            Format
+            <select id="format-select" aria-label="Copy output format">
+              <option value="plainText">Plain Text</option>
+              <option value="markdown">Markdown Bug Report</option>
+              <option value="slackCompact">Slack Compact</option>
+              <option value="jsonBundle">JSON Debug Bundle</option>
+              <option value="curl">cURL Replay</option>
+              <option value="fetchSnippet">fetch() Replay</option>
+            </select>
+          </label>
+
+          <div class="menu" id="include-menu-root">
+            <button
+              id="include-button"
+              type="button"
+              class="ghost"
+              aria-haspopup="true"
+              aria-expanded="false"
+            >
+              Include
+              <span class="chevron" aria-hidden="true">▾</span>
+            </button>
+
+            <div id="include-menu" class="include-menu" role="menu" hidden>
+              <p class="menu-title">Copy to clipboard</p>
+              <label role="menuitemcheckbox">
+                <input type="checkbox" data-section="method" checked />
+                <span>Method</span>
+              </label>
+              <label role="menuitemcheckbox">
+                <input type="checkbox" data-section="endpoint" checked />
+                <span>API Endpoint</span>
+              </label>
+              <label class="menu-suboption" role="menuitemcheckbox">
+                <input type="checkbox" id="include-endpoint-base-url-checkbox" />
+                <span>Include base URL</span>
+              </label>
+              <label role="menuitemcheckbox">
+                <input type="checkbox" data-section="status" />
+                <span>Status &amp; timing</span>
+              </label>
+              <label role="menuitemcheckbox">
+                <input type="checkbox" data-section="requestHeaders" />
+                <span>Request headers</span>
+              </label>
+              <label role="menuitemcheckbox">
+                <input type="checkbox" data-section="payload" checked />
+                <span>Payload</span>
+              </label>
+              <label role="menuitemcheckbox">
+                <input type="checkbox" data-section="responseHeaders" />
+                <span>Response headers</span>
+              </label>
+              <label role="menuitemcheckbox">
+                <input type="checkbox" data-section="response" checked />
+                <span>Response</span>
+              </label>
+              <div class="menu-divider"></div>
+              <label role="menuitemcheckbox">
+                <input type="checkbox" id="redact-secrets-checkbox" />
+                <span>Redact secrets</span>
+              </label>
+            </div>
+          </div>
+          <button id="clear-button" type="button" class="ghost">Clear</button>
+        </div>
+      </header>
+
+      <div id="redaction-warning" class="banner banner-warning" role="alert" hidden>
+        <strong>Warning:</strong> Secret redaction is off. Copying will include potentially sensitive data.
+      </div>
+
+      <section class="layout">
+        <aside class="sidebar">
+          <div class="search-wrap">
+            <input
+              id="search-input"
+              type="search"
+              placeholder="Filter by method, status, URL..."
+              autocomplete="off"
+            />
+          </div>
+
+          <div class="filter-bar" aria-label="Structured filters">
+            <label class="filter-label">
+              View
+              <select id="list-view-mode" aria-label="Request list view mode">
+                <option value="individual">Individual rows</option>
+                <option value="grouped">Grouped by API</option>
+              </select>
+            </label>
+            <label class="filter-label">
+              Response
+              <select id="outcome-filter" aria-label="Filter by API response outcome">
+                <option value="all">All</option>
+                <option value="succeeded">Succeeded only</option>
+                <option value="failed">Failed only</option>
+              </select>
+            </label>
+            <label class="filter-label">
+              Method
+              <select id="method-filter" aria-label="Filter by HTTP method">
+                <option value="all">All</option>
+                <option value="GET">GET</option>
+                <option value="POST">POST</option>
+                <option value="PUT">PUT</option>
+                <option value="PATCH">PATCH</option>
+                <option value="DELETE">DELETE</option>
+                <option value="OTHER">Other</option>
+              </select>
+            </label>
+            <label class="filter-label">
+              Sort
+              <select id="sort-mode" aria-label="Sort failed requests">
+                <option value="newest">Newest first</option>
+                <option value="oldest">Oldest first</option>
+                <option value="status">Status code</option>
+                <option value="slowest">Slowest first</option>
+              </select>
+            </label>
+          </div>
+
+          <div id="request-list" class="request-list" aria-label="Failed API requests"></div>
+          <div id="filter-empty-state" class="sidebar-empty" hidden>
+            <p>No requests match your filters.</p>
+            <p class="sidebar-empty-hint">Try clearing search text or widening response/method filters.</p>
+          </div>
+        </aside>
+
+        <section class="details">
+          <div id="empty-state" class="empty-state">
+            <div class="empty-icon" aria-hidden="true">⚠</div>
+            <h2>No failed API calls captured yet</h2>
+            <p>
+              Trigger a failing request in your app, then check the Network panel. Matching API
+              failures will appear here automatically.
+            </p>
+          </div>
+
+          <div id="selected-state" class="selected-state" hidden>
+            <header class="detail-head">
+              <div class="detail-head-main">
+                <h2 id="selected-title"></h2>
+                <p id="selected-url" class="detail-url"></p>
+              </div>
+              <button
+                id="copy-selected-button"
+                type="button"
+                class="primary"
+                aria-label="Copy selected failed API call"
+              >
+                Copy selected
+              </button>
+            </header>
+
+            <div class="detail-body">
+              <div class="detail-search-wrap">
+                <input
+                  id="detail-search-input"
+                  type="search"
+                  placeholder="Search preview..."
+                  autocomplete="off"
+                  aria-label="Search clipboard preview"
+                />
+              </div>
+
+              <section class="panel panel-grow accordion" id="preview-panel">
+                <details class="accordion-details accordion-details-grow" open>
+                  <summary class="panel-head accordion-trigger">
+                    <span>Clipboard preview</span>
+                    <div class="panel-head-actions">
+                      <div class="preview-meta">
+                        <span id="preview-format-label" class="panel-hint">Plain Text</span>
+                        <span id="preview-char-count" class="panel-hint">0 chars</span>
+                      </div>
+                      <span class="chevron accordion-chevron" aria-hidden="true"></span>
+                    </div>
+                  </summary>
+                  <div class="panel-body panel-body-grow">
+                    <div id="preview-notices" class="preview-notices" hidden></div>
+                    <div class="panel-scroll preview-scroll">
+                      <div id="preview" class="preview"></div>
+                      <p id="preview-search-empty" class="panel-search-empty" hidden>
+                        No content matches your search.
+                      </p>
+                    </div>
+                  </div>
+                </details>
+              </section>
+            </div>
+          </div>
+        </section>
+      </section>
+
+      <div id="menu-backdrop" class="menu-backdrop" hidden></div>
+      <div id="toast" class="toast" role="status" aria-live="polite"></div>
+    </main>
+
+    <script type="module" src="/src/panel.ts"></script>
+  </body>
+</html>

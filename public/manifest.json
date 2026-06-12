@@ -1,0 +1,12 @@
+{
+  "manifest_version": 3,
+  "name": "API এর যত কাহিনী",
+  "version": "0.1.0",
+  "description": "Copy failed API endpoint, payload, and response from DevTools in one click.",
+  "devtools_page": "devtools.html",
+  "icons": {
+    "48": "icons/panel.svg",
+    "128": "icons/panel.svg"
+  },
+  "permissions": ["storage"]
+}
